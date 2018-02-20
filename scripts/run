@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source ${SCRIPTS_DIR}/setup
+
+
+function run {
+    python run.py
+}
+
+eval_in_virtual_environment run

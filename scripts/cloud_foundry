@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source ${SCRIPTS_DIR}/environment
+
+
+function ensure_env {
+  ENVIRONMENT_VARIABLE_NAME=$1
+  APP_NAME=$2
+  DEFAULT_VARIABLE_VALUE=$3
+
+  cf env ${APP_NAME} | grep ${ENVIRONMENT_VARIABLE_NAME}
+  if (( $? != 0 )); then
+    cf set-env ${APP_NAME} "${ENVIRONMENT_VARIABLE_NAME}" "${DEFAULT_VARIABLE_VALUE}"
+  fi
+}
+
+
+function cloud_foundry {
+    ACTION_NAME=$1
+    APP_NAME="greenlight-brochure-wsgi"
+    ACTION_ARGS=$2
+
+    cf ${ACTION_NAME} ${APP_NAME} ${ACTION_ARGS}
+
+    ensure_env "BROCHURE_CONTACT_METHOD" ${APP_NAME} "${BROCHURE_CONTACT_METHOD}"
+    ensure_env "BROCHURE_ENTERPRISE" ${APP_NAME} "${BROCHURE_ENTERPRISE}"
+}
