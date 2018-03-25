@@ -18,7 +18,7 @@ function ensure_env {
 
 function cloud_foundry {
     ACTION_NAME=$1
-    APP_NAME="greenlight-brochure-wsgi"
+    APP_NAME="greenlight-web"
     ACTION_ARGS=$2
 
     cf ${ACTION_NAME} ${APP_NAME} ${ACTION_ARGS}

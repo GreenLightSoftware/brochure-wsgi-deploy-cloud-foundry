@@ -2,7 +2,7 @@
 --find-links vendor/
 
 brochure==0.0.3
-brochure-wsgi==0.0.4
+brochure-wsgi==0.0.5
 gunicorn==19.7.1
 Jinja2==2.10
 MarkupSafe==1.0
