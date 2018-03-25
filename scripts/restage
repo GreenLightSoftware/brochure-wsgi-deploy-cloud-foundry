@@ -2,6 +2,6 @@
 
 SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source ${SCRIPTS_DIR}/cloud_foundry
+APPLICATION_NAME=$1
 
-
-cloud_foundry restage
+cloud_foundry restage ${APPLICATION_NAME}

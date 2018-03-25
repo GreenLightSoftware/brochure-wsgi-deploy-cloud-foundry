@@ -18,8 +18,8 @@ function ensure_env {
 
 function cloud_foundry {
     ACTION_NAME=$1
-    APP_NAME="greenlight-web"
-    ACTION_ARGS=$2
+    APP_NAME=$2
+    ACTION_ARGS=$3
 
     cf ${ACTION_NAME} ${APP_NAME} ${ACTION_ARGS}
 

@@ -5,12 +5,12 @@ web application.
 
 ## Push the app to a cloud foundry instance
 
-`./scripts/push`
+`./scripts/push <YOUR-CF-APPLICATION-NAME-HERE>`
 
 
 ## Restage the app on a cloud foundry instance
 
-`./scripts/restage`
+`./scripts/restage <YOUR-CF-APPLICATION-NAME-HERE>`
 
 
 ## Run the app locally to test before deployment
