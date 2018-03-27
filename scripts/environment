@@ -6,3 +6,5 @@ SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export BROCHURE_CONTACT_METHOD=`cat ${SCRIPTS_DIR}/fixtures/contact_method.json`
 export BROCHURE_ENTERPRISE=`cat ${SCRIPTS_DIR}/fixtures/enterprise.json`
 export BROCHURE_COVER_SECTION=`cat ${SCRIPTS_DIR}/fixtures/cover_section.json`
+export BROCHURE_SOURCE_DOMAINS=`cat ${SCRIPTS_DIR}/fixtures/source_domains.json`
+export BROCHURE_TARGET_DOMAIN=`cat ${SCRIPTS_DIR}/fixtures/target_domain.json`

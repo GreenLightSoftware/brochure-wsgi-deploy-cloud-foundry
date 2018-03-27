@@ -13,6 +13,7 @@ from brochure_wsgi.value_fetchers.environment_enterprise_fetcher import environm
 from gunicorn.six import iteritems
 from werkzeug.routing import Map, Rule
 
+from cf_domain_redirect_preprocessor import get_cf_domain_redirect_preprocessor
 from cf_favicon_preprocessor import get_cf_favicon_preprocessor
 from cf_upgrade_to_ssl_preprocessor import get_cf_upgrade_to_ssl_preprocessor
 
@@ -49,9 +50,10 @@ if __name__ == "__main__":
                                              cover_section_fetcher=environment_cover_section_fetcher,
                                              enterprise_fetcher=environment_enterprise_fetcher)
     user_interface_provider = HTTPUserInterfaceProvider()
+    domain_redirect_preprocessor = get_cf_domain_redirect_preprocessor()
     upgrade_to_ssl_preprocessor = get_cf_upgrade_to_ssl_preprocessor()
     favicon_preprocessor = get_cf_favicon_preprocessor()
-    command_preprocessors = (upgrade_to_ssl_preprocessor, favicon_preprocessor,)
+    command_preprocessors = (domain_redirect_preprocessor, upgrade_to_ssl_preprocessor, favicon_preprocessor,)
 
     brochure_wsgi_application = BrochureWSGIApplication(domain_application=domain_application,
                                                         user_interface_provider=user_interface_provider,
