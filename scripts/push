@@ -5,5 +5,5 @@ source ${SCRIPTS_DIR}/cloud_foundry
 APPLICATION_NAME=$1
 
 
-cloud_foundry "push" ${APPLICATION_NAME} "-b python_buildpack"
+cloud_foundry "push" ${APPLICATION_NAME} "-b python_buildpack -s cflinuxfs3"
 cloud_foundry restage ${APPLICATION_NAME}
