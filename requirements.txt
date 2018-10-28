@@ -3,7 +3,7 @@
 
 brochure==0.0.3
 brochure-wsgi==0.0.8
-gunicorn==19.7.1
+gunicorn==19.9.0
 Jinja2==2.10
 MarkupSafe==1.0
 Werkzeug==0.14.1

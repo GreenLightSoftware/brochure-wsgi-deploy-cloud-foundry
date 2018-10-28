@@ -1,68 +1,59 @@
-import multiprocessing
 import os
+from json import loads
 
-import gunicorn.app.base
-from brochure.brochure_application import BrochureApplication
-from brochure.commands.command_types import CommandType
-from brochure_wsgi.brochure_wsgi_application import BrochureWSGIApplication
-from brochure_wsgi.http_user_interface import HTTPUserInterfaceProvider
-from brochure_wsgi.path_command_provider import GetPathCommandProvider
-from brochure_wsgi.value_fetchers.environment_contact_method_fetcher import environment_contact_method_fetcher
-from brochure_wsgi.value_fetchers.environment_cover_section_fetcher import environment_cover_section_fetcher
-from brochure_wsgi.value_fetchers.environment_enterprise_fetcher import environment_enterprise_fetcher
-from gunicorn.six import iteritems
-from werkzeug.routing import Map, Rule
+from werkzeug.wrappers import Response
 
-from cf_domain_redirect_preprocessor import get_cf_domain_redirect_preprocessor
-from cf_favicon_preprocessor import get_cf_favicon_preprocessor
-from cf_upgrade_to_ssl_preprocessor import get_cf_upgrade_to_ssl_preprocessor
+from common import url_from_environment
+from gunicorn_application import GunicornApplication
+from pure_wsgi import get_redirect_to_secure_scheme_preprocessor, get_domain_redirect_preprocessor
+from sparse_werkzeug import get_sparse_werkzeug_application
+from whitenoise_handler import get_static_file_handler_provider
 
 
-class GunicornApplication(gunicorn.app.base.BaseApplication):
-    def __init__(self, application, options=None):
-        self.options = options or {}
-        self.application = application
-        super().__init__()
+def main():
+    static_file_handler_provider = get_static_file_handler_provider()
+    favicon_url = "/favicon.ico"
+    favicon_request_handler = static_file_handler_provider(favicon_url, get_relative_filepath("static", "favicon.ico"))
 
-    def init(self, parser, opts, args):
-        pass
+    path_rules = {
+        "/": lambda: Response("Welcome to our place"),
+        favicon_url: lambda: favicon_request_handler,
+        "/sections/<name>": lambda name: Response("Welcome to the {} section.".format(name)),
+    }
 
-    def load_config(self):
-        config = dict([(key, value) for key, value in iteritems(self.options)
-                       if key in self.cfg.settings and value is not None])
-        for key, value in iteritems(config):
-            self.cfg.set(key.lower(), value)
+    exception_rules = {
+        404: lambda environ: Response("Not Found: '{}'".format(environ.get("PATH_INFO", "UNKNOWN")), status=404),
+        405: lambda environ: Response("Not Allowed", status=405),
+    }
 
-    def load(self):
-        return self.application
+    preprocessors = tuple()
+    if not os.environ.get("LOCAL"):
+        secure_scheme = "https"
+        source_domains = loads(os.environ.get("BROCHURE_SOURCE_DOMAINS", "[]"))
+        target_domain = loads(os.environ.get("BROCHURE_TARGET_DOMAIN", "{}")).get("target_domain", "localhost")
+
+        domain_redirect_preprocessor = get_domain_redirect_preprocessor(source_domains=source_domains,
+                                                                        target_domain=target_domain,
+                                                                        source_url_provider=url_from_environment,
+                                                                        force_target_scheme=secure_scheme)
+        upgrade_to_https = get_redirect_to_secure_scheme_preprocessor(
+            is_insecure=lambda e: e.get("HTTP_X_FORWARDED_PROTO", False) not in (secure_scheme,),
+            source_url_provider=url_from_environment,
+            secure_scheme=secure_scheme
+        )
+
+        preprocessors = (domain_redirect_preprocessor, upgrade_to_https)
+
+    wsgi_application = get_sparse_werkzeug_application(preprocessors=preprocessors,
+                                                       path_rules=path_rules,
+                                                       exception_rules=exception_rules)
+    gunicorn_application = GunicornApplication(application=wsgi_application)
+    gunicorn_application.run()
+
+
+def get_relative_filepath(*path_fragments):
+    return os.path.join(os.path.dirname(os.path.realpath(__file__)), *path_fragments)
 
 
 if __name__ == "__main__":
-    option_dictionary = {
-        "bind": '%s:%s' % ('0.0.0.0', os.environ.get("PORT", "8000")),
-        "workers": (multiprocessing.cpu_count() * 2) + 1,
-    }
-    brochure_application_command_map = Map()
-    brochure_application_command_map.add(Rule("/", endpoint=lambda: CommandType.SHOW_COVER))
-    get_path_command_provider = GetPathCommandProvider(url_map=brochure_application_command_map)
-
-    domain_application = BrochureApplication(contact_method_fetcher=environment_contact_method_fetcher,
-                                             cover_section_fetcher=environment_cover_section_fetcher,
-                                             enterprise_fetcher=environment_enterprise_fetcher)
-    user_interface_provider = HTTPUserInterfaceProvider()
-
-    command_preprocessors = None
-    favicon_preprocessor = get_cf_favicon_preprocessor()
-    if os.environ.get("DEBUG", False):
-        command_preprocessors = (favicon_preprocessor,)
-    else:
-        domain_redirect_preprocessor = get_cf_domain_redirect_preprocessor()
-        upgrade_to_ssl_preprocessor = get_cf_upgrade_to_ssl_preprocessor()
-        command_preprocessors = (favicon_preprocessor, domain_redirect_preprocessor, upgrade_to_ssl_preprocessor)
-
-    brochure_wsgi_application = BrochureWSGIApplication(domain_application=domain_application,
-                                                        user_interface_provider=user_interface_provider,
-                                                        get_path_command_provider=get_path_command_provider,
-                                                        command_preprocessors=command_preprocessors)
-    GunicornApplication(application=brochure_wsgi_application,
-                        options=option_dictionary).run()
+    main()
