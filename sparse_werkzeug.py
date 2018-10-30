@@ -1,4 +1,4 @@
-from typing import Iterable, Callable, Dict, Any
+from typing import Iterable, Callable, Dict, Any, Optional
 
 from werkzeug.routing import Map, Rule
 from werkzeug.wrappers import Response
@@ -6,23 +6,29 @@ from werkzeug.wrappers import Response
 from sparse_wsgi import get_sparse_wsgi_application
 
 
-def get_sparse_werkzeug_application(preprocessors: Iterable[Callable] = None,
+def get_sparse_werkzeug_application(preprocessors: Optional[Iterable[Callable]] = None,
                                     path_rules: Dict[str, Dict[str, Any]] = None,
-                                    exception_rules: Dict[int, Callable] = None):
-    def get_url_map(rules):
+                                    exception_rules: Optional[Dict[int, Callable]] = None):
+    def get_url_map(rules: Optional[Dict] = None):
+        final_rules = rules or {}
         url_map = Map()
-        for path, options in rules.items():
+        for path, options in final_rules.items():
             options.setdefault("methods", ("GET", "HEAD"))
             url_map.add(Rule(path, **options))
 
         return url_map
 
-    def get_exception_handler_provider(rules):
+    def get_exception_handler_provider(rules: Optional[Dict[int, Callable]] = None):
         def _exception_handler_provider(exception, environ):
-            handlers = {500: lambda env: Response(str(exception), status=500), **rules}
-            code = getattr(exception, 'code', 500)
+            final_rules = rules or {}
 
-            return handlers[code](environ)
+            def _generic_execption(status):
+                return lambda env: Response(str(exception), status=status)
+
+            handlers = {500: _generic_execption(500), **final_rules}
+            status_code = getattr(exception, 'code', 500)
+
+            return handlers.get(status_code, _generic_execption(status_code))(environ)
 
         return _exception_handler_provider
 
