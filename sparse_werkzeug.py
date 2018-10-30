@@ -1,4 +1,4 @@
-from typing import Iterable, Callable, Dict
+from typing import Iterable, Callable, Dict, Any
 
 from werkzeug.routing import Map, Rule
 from werkzeug.wrappers import Response
@@ -7,11 +7,13 @@ from sparse_wsgi import get_sparse_wsgi_application
 
 
 def get_sparse_werkzeug_application(preprocessors: Iterable[Callable] = None,
-                                    path_rules: Dict[str, Callable] = None,
+                                    path_rules: Dict[str, Dict[str, Any]] = None,
                                     exception_rules: Dict[int, Callable] = None):
     def get_url_map(rules):
         url_map = Map()
-        [url_map.add(Rule(path, endpoint=response)) for path, response in rules.items()]
+        for path, options in rules.items():
+            options.setdefault("methods", ("GET", "HEAD"))
+            url_map.add(Rule(path, **options))
 
         return url_map
 

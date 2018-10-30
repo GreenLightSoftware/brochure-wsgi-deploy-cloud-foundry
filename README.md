@@ -13,6 +13,6 @@ web application.
 `./scripts/restage <YOUR-CF-APPLICATION-NAME-HERE>`
 
 
-## Run the app locally to test before deployment
+## Debug the app locally to test before deployment
 
-`./scripts/run`
+`./scripts/debug`
