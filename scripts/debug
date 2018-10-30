@@ -5,7 +5,7 @@ source ${SCRIPTS_DIR}/setup
 
 
 function debug {
-    python run.py
+    SECURE_SCHEME="http" python run.py
 }
 
 eval_in_virtual_environment debug
