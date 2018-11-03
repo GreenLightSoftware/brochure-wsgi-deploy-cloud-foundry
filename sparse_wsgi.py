@@ -1,8 +1,7 @@
 from typing import Callable
 
 
-def get_sparse_wsgi_application(preprocessors=None,
-                                request_handler=None,
+def get_sparse_wsgi_application(request_handler=None,
                                 exception_handler_provider=None):
     def _ok(environ, start_response):
         start_response('200 OK', [('Content-Type', 'text/plain')])
@@ -18,11 +17,6 @@ def get_sparse_wsgi_application(preprocessors=None,
     def _sparse_wsgi(environ, start_response: Callable):
         # noinspection PyBroadException
         try:
-            for preprocessor in preprocessors or tuple():
-                response_provider = preprocessor(environ=environ)
-                if response_provider is not None:
-                    return response_provider(environ=environ, start_response=start_response)
-
             sparse_request_handlers: Callable = request_handler or _ok
             response_provider = sparse_request_handlers(environ)
             return response_provider(environ=environ, start_response=start_response)

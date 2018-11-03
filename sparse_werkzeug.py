@@ -6,8 +6,7 @@ from werkzeug.wrappers import Response
 from sparse_wsgi import get_sparse_wsgi_application
 
 
-def get_sparse_werkzeug_application(preprocessors: Optional[Iterable[Callable]] = None,
-                                    path_rules: Dict[str, Dict[str, Any]] = None,
+def get_sparse_werkzeug_application(path_rules: Dict[str, Dict[str, Any]] = None,
                                     exception_rules: Optional[Dict[int, Callable]] = None):
     def get_url_map(rules: Optional[Dict] = None):
         final_rules = rules or {}
@@ -47,6 +46,5 @@ def get_sparse_werkzeug_application(preprocessors: Optional[Iterable[Callable]] 
     request_handler = get_request_handler(rules=path_rules)
     exception_handler = get_exception_handler_provider(rules=exception_rules)
 
-    return get_sparse_wsgi_application(preprocessors=preprocessors,
-                                       request_handler=request_handler,
+    return get_sparse_wsgi_application(request_handler=request_handler,
                                        exception_handler_provider=exception_handler)

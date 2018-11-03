@@ -6,9 +6,9 @@ from werkzeug.wrappers import Response
 from werkzeug.wsgi import get_current_url
 from whitenoise import WhiteNoise
 
-from wsgi_common import get_domain_redirect_preprocessor, get_redirect_to_secure_scheme_preprocessor
 from gunicorn_application import GunicornApplication
 from sparse_werkzeug import get_sparse_werkzeug_application
+from wsgi_common import get_domain_redirect_preprocessor, get_redirect_to_secure_scheme_preprocessor
 
 
 def main():
@@ -17,8 +17,8 @@ def main():
     serve_favicon = get_static_file_handler(whitenoise, favicon_url, get_relative_filepath("static", "favicon.ico"))
 
     path_rules = {
-        "/": {"endpoint": lambda: Response("Welcome to our place")},
-        "/sections/<name>": {"endpoint": lambda name: Response("Welcome to the {} section.".format(name))},
+        "/": {"endpoint": lambda: Response("Welcome to our fancy page")},
+        "/sections/<name>": {"endpoint": lambda name: Response("Welcome to the fancy '{}' section.".format(name))},
         favicon_url: {"endpoint": serve_favicon},
     }
 
@@ -42,16 +42,15 @@ def main():
         secure_scheme=secure_scheme
     )
 
-    preprocessors = (domain_redirect_preprocessor, upgrade_to_https_preprocessor)
-
-    wsgi_application = get_sparse_werkzeug_application(preprocessors=preprocessors,
-                                                       path_rules=path_rules,
-                                                       exception_rules=exception_rules)
+    application = get_sparse_werkzeug_application(path_rules=path_rules,
+                                                  exception_rules=exception_rules)
+    secure_application = upgrade_to_https_preprocessor(application)
+    redirected_secure_application = domain_redirect_preprocessor(secure_application)
 
     in_production_mode = target_domain != localhost
     get_runner = get_production_runner if in_production_mode else get_development_runner
 
-    run_application = get_runner(wsgi_application, target_domain, port)
+    run_application = get_runner(redirected_secure_application, target_domain, port)
 
     run_application()
 
