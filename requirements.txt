@@ -4,7 +4,7 @@
 brochure==0.0.3
 brochure-wsgi==0.0.8
 gunicorn==19.7.1
-Jinja2==2.10
-MarkupSafe==1.0
-Werkzeug==0.14.1
+Jinja2==2.10.3
+MarkupSafe==1.1.1
+Werkzeug==0.16
 whitenoise==3.3.1
